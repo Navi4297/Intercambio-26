@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amigo Secreto · Organizador de Intercambio Sin Spoilers</title>
+
+  <!-- Google Fonts: Fraunces para títulos festivos y Plus Jakarta Sans para interfaz -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Configuración personalizada de paleta y tipografía en Tailwind -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pine: {
+              950: '#091712',
+              900: '#0F241D',
+              800: '#16352B',
+              700: '#1F493B',
+              600: '#2A614F',
+              100: '#E6F0EC',
+            },
+            cream: {
+              50: '#FDFBF7',
+              100: '#FAF5EC',
+              200: '#F2E8D8',
+              300: '#E5D5BC',
+            },
+            crimson: {
+              500: '#C83E46',
+              600: '#B02E36',
+              700: '#8F2229',
+              50: '#FDF2F3',
+            },
+            gold: {
+              300: '#F3D98B',
+              400: '#E2BE5B',
+              500: '#C9A033',
+              600: '#A68020',
+            }
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            festive: '0 20px 45px -15px rgba(9, 23, 18, 0.35)',
+            card: '0 10px 30px -10px rgba(15, 36, 29, 0.08)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Fondo texturizado sutil festivo */
+    body {
+      background-color: #FAF5EC;
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(201, 160, 51, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 85% 25%, rgba(176, 46, 54, 0.06) 0%, transparent 45%),
+        radial-gradient(rgba(22, 53, 43, 0.06) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 24px 24px;
+    }
+
+    /* Animaciones de caja de regalo y revelación */
+    @keyframes floatGift {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      25% { transform: translateY(-6px) rotate(-1.5deg); }
+      75% { transform: translateY(-4px) rotate(1.5deg); }
+    }
+
+    @keyframes popReveal {
+      0% { opacity: 0; transform: scale(0.82) translateY(16px); }
+      65% { opacity: 1; transform: scale(1.03) translateY(-2px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes lidFly {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-42px) rotate(-14deg) scale(1.06); opacity: 0.95; }
+    }
+
+    .animate-float-gift {
+      animation: floatGift 3.2s ease-in-out infinite;
+    }
+
+    .animate-pop-reveal {
+      animation: popReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .gift-lid-open {
+      animation: lidFly 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Scrollbar elegante */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F2E8D8;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1F493B;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-pine-900 font-sans antialiased selection:bg-gold-300 selection:text-pine-950 flex flex-col">
+
+  <!-- Canvas para partículas de confeti festivo -->
+  <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+  <!-- Notificación Toast flotante (reemplaza alert()) -->
+  <div id="toast-container" class="fixed bottom-5 right-5 left-5 sm:left-auto sm:w-96 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Encabezado Principal -->
+  <header class="bg-pine-900 text-cream-50 border-b border-gold-500/30 shadow-md relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(#E2BE5B 1px, transparent 1px); background-size: 18px 18px;"></div>
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-6 relative flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5 text-center sm:text-left">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-crimson-500 to-crimson-700 border border-gold-400/50 flex items-center justify-center shadow-lg shrink-0">
+          <i data-lucide="gift" class="w-6 h-6 text-gold-300"></i>
+        </div>
+        <div>
+          <span class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gold-400">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Edición Festiva · Sin Spoilers
+          </span>
+          <h1 class="font-display text-2xl sm:text-3xl font-bold tracking-tight text-cream-50">
+            Amigo Secreto
+          </h1>
+        </div>
+      </div>
+
+      <!-- Indicador de estado / Navegación rápida -->
+      <div id="header-badge" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pine-800/90 border border-gold-500/30 text-xs sm:text-sm text-cream-100">
+        <span class="w-2 h-2 rounded-full bg-gold-400 animate-pulse"></span>
+        <span id="header-status-text">Modo Organizador</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10">
+
+    <!-- ===================================================================== -->
+    <!-- PANTALLA 1: CONFIGURACIÓN DEL INTERCAMBIO (MODO ORGANIZADOR)          -->
+    <!-- ===================================================================== -->
+    <section id="screen-setup" class="space-y-6">
+
+      <!-- Banner introductorio -->
+      <div class="bg-white/90 backdrop-blur border border-cream-300 rounded-2xl p-5 sm:p-6 shadow-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="font-display text-xl sm:text-2xl font-bold text-pine-900">
+            Organiza tu intercambio en segundos
+          </h2>
+          <p class="text-sm text-pine-700 mt-1">
+            Agrega a los participantes, define reglas opcionales y genera el sorteo oculto para que tú también puedas jugar sin saber quién te tocó.
+          </p>
+        </div>
+        <button
+          type="button"
+          id="btn-load-sample"
+          class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cream-100 hover:bg-cream-200 text-pine-900 font-semibold text-sm border border-cream-300 transition active:scale-[0.98]"
+        >
+          <i data-lucide="wand-2" class="w-4 h-4 text-crimson-600"></i>
+          Cargar ejemplo
+        </button>
+      </div>
+
+      <!-- Tarjeta 1: Detalles del Evento -->
+      <div class="bg-white rounded-2xl border border-cream-300 p-5 sm:p-6 shadow-card">
+        <div class="flex items-center gap-2.5 mb-5">
+          <div class="w-8 h-8 rounded-lg bg-pine-100 text-pine-800 flex items-center justify-center">
+            <i data-lucide="calendar-heart" class="w-4 h-4"></i>
+          </div>
+          <h3 class="font-display text-lg font-bold text-pine-900">1. Detalles del Evento</h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label for="event-name" class="block text-xs font-semibold uppercase tracking-wide text-pine-700 mb-1.5">
+              Nombre del evento *
+            </label>
+            <input
+              type="text"
+              id="event-name"
+              placeholder="Ej. Intercambio Navideño 2026"
+              value="Intercambio Navideño 2026"
+              class="w-full px-4 py-2.5 rounded-xl bg-cream-50 border border-cream-300 text-pine-900 placeholder:text-pine-600/50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition"
+            />
+          </div>
+
+          <div>
+            <label for="event-date" class="block text-xs font-semibold uppercase tracking-wide text-pine-700 mb-1.5">
+              Fecha del intercambio
+            </label>
+            <input
+              type="date"
+              id="event-date"
+              value="2026-12-24"
+              class="w-full px-4 py-2.5 rounded-xl bg-cream-50 border border-cream-300 text-pine-900 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition"
+            />
+          </div>
+
+          <div>
+            <label for="event-budget" class="block text-xs font-semibold uppercase tracking-wide text-pine-700 mb-1.5">
+              Presupuesto sugerido
+            </label>
+            <input
+              type="text"
+              id="event-budget"
+              placeholder="Ej. $400 MXN"
+              value="$400 MXN"
+              class="w-full px-4 py-2.5 rounded-xl bg-cream-50 border border-cream-300 text-pine-900 placeholder:text-pine-600/50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta 2: Participantes y Lista de Deseos -->
+      <div class="bg-white rounded-2xl border border-cream-300 p-5 sm:p-6 shadow-card">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-5">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-crimson-50 text-crimson-600 flex items-center justify-center">
+              <i data-lucide="users" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h3 class="font-display text-lg font-bold text-pine-900">
+                2. Participantes
+                <span id="participant-count-badge" class="ml-1.5 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-sans font-semibold bg-pine-100 text-pine-800">
+                  0
+                </span>
+              </h3>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            id="btn-clear-participants"
+            class="hidden text-xs font-semibold text-crimson-600 hover:text-crimson-700 hover:underline px-2 py-1"
+          >
+            Vaciar lista
+          </button>
+        </div>
+
+        <!-- Formulario para agregar participante -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 mb-3">
+          <div class="md:col-span-4">
+            <label for="input-participant-name" class="sr-only">Nombre del participante</label>
+            <input
+              type="text"
+              id="input-participant-name"
+              placeholder="Nombre (ej. Sofía)"
+              autocomplete="off"
+              class="w-full px-4 py-3 rounded-xl bg-cream-50 border border-cream-300 text-pine-900 placeholder:text-pine-600/50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition"
+            />
+          </div>
+
+          <div class="md:col-span-5">
+            <label for="input-participant-wishlist" class="sr-only">Lista de deseos o pista</label>
+            <input
+              type="text"
+              id="input-participant-wishlist"
+              placeholder="Pista / Lista de deseos (opcional)"
+              autocomplete="off"
+              class="w-full px-4 py-3 rounded-xl bg-cream-50 border border-cream-300 text-pine-900 placeholder:text-pine-600/50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition"
+            />
+          </div>
+
+          <div class="md:col-span-3">
+            <button
+              type="button"
+              id="btn-add-participant"
+              class="w-full h-full min-h-[46px] inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-pine-800 hover:bg-pine-900 text-cream-50 font-semibold text-sm shadow-sm transition active:scale-[0.98]"
+            >
+              <i data-lucide="user-plus" class="w-4 h-4 text-gold-400"></i>
+              Agregar
+            </button>
+          </div>
+        </div>
+
+        <!-- Mensaje de error inline al agregar -->
+        <p id="participant-error" class="hidden text-xs font-medium text-crimson-600 mb-3 flex items-center gap-1.5">
+          <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
+          <span></span>
+        </p>
+
+        <!-- Lista dinámica de participantes -->
+        <div id="participants-empty-state" class="mt-4 py-8 px-4 rounded-xl border-2 border-dashed border-cream-300 bg-cream-50/60 text-center">
+          <div class="w-11 h-11 rounded-full bg-cream-200/80 text-pine-700 mx-auto flex items-center justify-center mb-2.5">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <p class="text-sm font-semibold text-pine-900">Aún no hay participantes</p>
+          <p class="text-xs text-pine-700 mt-1">Agrega al menos 3 personas (presiona <kbd class="px-1.5 py-0.5 bg-white border border-cream-300 rounded text-[11px]">Enter</kbd> para ir rápido) o usa "Cargar ejemplo".</p>
+        </div>
+
+        <ul id="participants-list" class="mt-4 space-y-2.5"></ul>
+      </div>
+
+      <!-- Tarjeta 3: Restricciones / Exclusiones (Colapsable) -->
+      <div class="bg-white rounded-2xl border border-cream-300 shadow-card overflow-hidden">
+        <button
+          type="button"
+          id="btn-toggle-restrictions"
+          aria-expanded="false"
+          class="w-full px-5 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-cream-50/70 transition"
+        >
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-gold-300/30 text-gold-600 flex items-center justify-center">
+              <i data-lucide="shield-ban" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h3 class="font-display text-lg font-bold text-pine-900 flex items-center gap-2">
+                3. Restricciones y Exclusiones
+                <span id="restrictions-count-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-xs font-sans font-semibold bg-crimson-50 text-crimson-700 border border-crimson-500/20">
+                  0
+                </span>
+              </h3>
+              <p class="text-xs text-pine-700">Opcional: evita que parejas o ciertas personas se regalen entre sí</p>
+            </div>
+          </div>
+          <i id="restrictions-chevron" data-lucide="chevron-down" class="w-5 h-5 text-pine-700 transition-transform duration-200"></i>
+        </button>
+
+        <div id="restrictions-panel" class="hidden px-5 sm:px-6 pb-6 pt-2 border-t border-cream-200">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end mt-2">
+            <div class="md:col-span-4">
+              <label for="select-giver" class="block text-xs font-semibold text-pine-700 mb-1">Quien regala</label>
+              <select
+                id="select-giver"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-cream-300 text-sm text-pine-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
+              >
+                <option value="">Selecciona persona...</option>
+              </select>
+            </div>
+
+            <div class="md:col-span-2 text-center py-1 md:py-2.5">
+              <span class="inline-block text-xs font-bold uppercase tracking-wider text-crimson-600 bg-crimson-50 px-2.5 py-1 rounded-lg">
+                no regala a
+              </span>
+            </div>
+
+            <div class="md:col-span-4">
+              <label for="select-receiver" class="block text-xs font-semibold text-pine-700 mb-1">Destinatario excluido</label>
+              <select
+                id="select-receiver"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-cream-50 border border-cream-300 text-sm text-pine-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
+              >
+                <option value="">Selecciona persona...</option>
+              </select>
+            </div>
+
+            <div class="md:col-span-2">
+              <button
+                type="button"
+                id="btn-add-restriction"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-pine-800 hover:bg-pine-900 text-cream-50 font-semibold text-sm transition active:scale-[0.98]"
+              >
+                Añadir
+              </button>
+            </div>
+          </div>
+
+          <label class="mt-3 inline-flex items-center gap-2 cursor-pointer select-none text-xs sm:text-sm text-pine-800">
+            <input type="checkbox" id="checkbox-mutual" checked class="w-4 h-4 rounded accent-crimson-600 cursor-pointer" />
+            <span>Exclusión mutua (tampoco el segundo puede regalarle al primero)</span>
+          </label>
+
+          <p id="restriction-error" class="hidden text-xs font-medium text-crimson-600 mt-2.5 flex items-center gap-1.5">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
+            <span></span>
+          </p>
+
+          <!-- Lista de reglas activas -->
+          <div id="restrictions-list" class="mt-4 flex flex-wrap gap-2"></div>
+        </div>
+      </div>
+
+      <!-- Alerta de error del sorteo (ej. combinación matemáticamente imposible) -->
+      <div id="draw-error-box" class="hidden rounded-2xl bg-crimson-50 border-2 border-crimson-500/40 p-4 sm:p-5 text-crimson-700 shadow-sm">
+        <div class="flex items-start gap-3">
+          <i data-lucide="triangle-alert" class="w-5 h-5 text-crimson-600 shrink-0 mt-0.5"></i>
+          <div>
+            <h4 class="font-bold text-sm sm:text-base text-crimson-700">No se pudo completar el sorteo</h4>
+            <p id="draw-error-message" class="text-xs sm:text-sm mt-1 leading-relaxed"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botón Principal de Sorteo -->
+      <div class="pt-2 flex flex-col items-center">
+        <button
+          type="button"
+          id="btn-run-draw"
+          class="w-full sm:w-auto min-w-[280px] inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-crimson-600 to-crimson-700 hover:from-crimson-500 hover:to-crimson-600 text-cream-50 font-display text-lg font-bold shadow-festive border border-gold-400/40 transition transform hover:-translate-y-0.5 active:translate-y-0"
+        >
+          <i data-lucide="sparkles" class="w-5 h-5 text-gold-300"></i>
+          <span>¡Realizar Sorteo Secreto!</span>
+        </button>
+        <p class="text-xs text-pine-700 mt-2.5 text-center">
+          Los resultados permanecerán ocultos en pantalla para que tú también puedas participar.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- PANTALLA 2: PANEL DE REPARTO SIN SPOILERS                             -->
+    <!-- ===================================================================== -->
+    <section id="screen-dashboard" class="hidden space-y-6">
+
+      <!-- Encabezado del Sorteo Activo -->
+      <div class="bg-pine-900 text-cream-50 rounded-2xl p-6 sm:p-7 shadow-festive border border-gold-500/30 relative overflow-hidden">
+        <div class="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
+          <i data-lucide="gift" class="w-44 h-44 text-gold-300"></i>
+        </div>
+
+        <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pine-800 border border-gold-400/30 text-gold-300 text-xs font-semibold mb-3">
+              <i data-lucide="eye-off" class="w-3.5 h-3.5"></i>
+              Modo Sin Spoilers Activado
+            </div>
+            <h2 id="dash-event-name" class="font-display text-2xl sm:text-3xl font-bold text-cream-50">
+              Intercambio Navideño 2026
+            </h2>
+            <div class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-2.5 text-sm text-cream-200">
+              <span id="dash-event-date-wrap" class="inline-flex items-center gap-1.5">
+                <i data-lucide="calendar" class="w-4 h-4 text-gold-400"></i>
+                <span id="dash-event-date">24 de diciembre de 2026</span>
+              </span>
+              <span id="dash-event-budget-wrap" class="inline-flex items-center gap-1.5">
+                <i data-lucide="wallet" class="w-4 h-4 text-gold-400"></i>
+                Presupuesto: <strong id="dash-event-budget" class="text-gold-300">$400 MXN</strong>
+              </span>
+              <span class="inline-flex items-center gap-1.5">
+                <i data-lucide="users" class="w-4 h-4 text-gold-400"></i>
+                <span id="dash-event-count">6</span> participantes
+              </span>
+            </div>
+          </div>
+
+          <div class="shrink-0">
+            <button
+              type="button"
+              id="btn-open-reset-modal"
+              class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-pine-800 hover:bg-pine-700 text-cream-100 text-sm font-semibold border border-cream-200/20 transition"
+            >
+              <i data-lucide="rotate-ccw" class="w-4 h-4 text-gold-400"></i>
+              Reiniciar / Nuevo sorteo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instrucciones de reparto -->
+      <div class="bg-cream-200/60 border border-cream-300 rounded-2xl p-4 sm:px-5 flex items-center gap-3 text-xs sm:text-sm text-pine-800">
+        <i data-lucide="shield-check" class="w-5 h-5 text-pine-700 shrink-0"></i>
+        <p>
+          <strong>¡Listo para repartir!</strong> Si están juntos, usa <strong>"Ver aquí"</strong> y pásale el teléfono a cada persona. Si están a distancia, envía su <strong>enlace secreto</strong> o el <strong>mensaje de WhatsApp</strong>.
+        </p>
+      </div>
+
+      <!-- Cuadrícula de Tarjetas de Participantes -->
+      <div id="dashboard-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5"></div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- PANTALLA 3: VISTA DE REVELACIÓN DIRECTA (VÍA #reveal=...)              -->
+    <!-- ===================================================================== -->
+    <section id="screen-direct-reveal" class="hidden max-w-lg mx-auto py-2 sm:py-6">
+      <div id="direct-reveal-container"></div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================================= -->
+  <!-- MODAL DE REVELACIÓN EN DISPOSITIVO (PANTALLA 2 -> "VER AQUÍ")           -->
+  <!-- ======================================================================= -->
+  <div id="device-reveal-modal" class="hidden fixed inset-0 z-40 bg-pine-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div id="device-reveal-content" class="w-full max-w-md my-auto"></div>
+  </div>
+
+  <!-- ======================================================================= -->
+  <!-- MODAL DE CONFIRMACIÓN PARA REINICIAR SORTEO (REEMPLAZA confirm())       -->
+  <!-- ======================================================================= -->
+  <div id="reset-confirm-modal" class="hidden fixed inset-0 z-40 bg-pine-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-cream-300 max-w-md w-full p-6 shadow-festive animate-pop-reveal">
+      <div class="w-12 h-12 rounded-2xl bg-crimson-50 text-crimson-600 flex items-center justify-center mb-4">
+        <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
+      </div>
+      <h3 class="font-display text-xl font-bold text-pine-900">¿Reiniciar este sorteo?</h3>
+      <p class="text-sm text-pine-700 mt-2 leading-relaxed">
+        Se borrarán las asignaciones actuales y los enlaces anteriores dejarán de tener validez para tu nuevo sorteo. ¿Cómo deseas continuar?
+      </p>
+
+      <div class="mt-6 space-y-2.5">
+        <button
+          type="button"
+          id="btn-reset-keep-people"
+          class="w-full px-4 py-3 rounded-xl bg-pine-800 hover:bg-pine-900 text-cream-50 font-semibold text-sm flex items-center justify-center gap-2 transition"
+        >
+          <i data-lucide="users" class="w-4 h-4 text-gold-400"></i>
+          Conservar participantes y editar
+        </button>
+
+        <button
+          type="button"
+          id="btn-reset-all"
+          class="w-full px-4 py-3 rounded-xl bg-crimson-50 hover:bg-crimson-500/15 text-crimson-700 font-semibold text-sm flex items-center justify-center gap-2 border border-crimson-500/20 transition"
+        >
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+          Borrar todo y empezar de cero
+        </button>
+
+        <button
+          type="button"
+          id="btn-reset-cancel"
+          class="w-full px-4 py-2.5 rounded-xl text-pine-700 hover:bg-cream-100 font-medium text-sm transition"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================= -->
+  <!-- MODAL DE EDICIÓN DE PARTICIPANTE                                        -->
+  <!-- ======================================================================= -->
+  <div id="edit-participant-modal" class="hidden fixed inset-0 z-40 bg-pine-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-cream-300 max-w-md w-full p-6 shadow-festive animate-pop-reveal">
+      <h3 class="font-display text-xl font-bold text-pine-900 mb-4">Editar participante</h3>
+      <div class="space-y-4">
+        <div>
+          <label for="edit-name-input" class="block text-xs font-semibold uppercase tracking-wide text-pine-700 mb-1">Nombre *</label>
+          <input
+            type="text"
+            id="edit-name-input"
+            class="w-full px-4 py-2.5 rounded-xl bg-cream-50 border border-cream-300 text-pine-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
+          />
+        </div>
+        <div>
+          <label for="edit-wishlist-input" class="block text-xs font-semibold uppercase tracking-wide text-pine-700 mb-1">Pista / Lista de deseos</label>
+          <input
+            type="text"
+            id="edit-wishlist-input"
+            placeholder="Opcional"
+            class="w-full px-4 py-2.5 rounded-xl bg-cream-50 border border-cream-300 text-pine-900 focus:outline-none focus:ring-2 focus:ring-gold-500"
+          />
+        </div>
+        <p id="edit-modal-error" class="hidden text-xs font-medium text-crimson-600"></p>
+      </div>
+      <div class="mt-6 flex items-center justify-end gap-2.5">
+        <button type="button" id="btn-edit-cancel" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-pine-700 hover:bg-cream-100">
+          Cancelar
+        </button>
+        <button type="button" id="btn-edit-save" class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-pine-800 hover:bg-pine-900 text-cream-50">
+          Guardar cambios
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pie de página -->
+  <footer class="py-6 text-center text-xs text-pine-700/80 border-t border-cream-300/70 mt-auto">
+    <p>Hecho con espíritu festivo · 100% privado en tu navegador (sin servidores ni spoilers)</p>
+  </footer>
+
+  <!-- ======================================================================= -->
+  <!-- LÓGICA DE LA APLICACIÓN                                                 -->
+  <!-- ======================================================================= -->
+  <script>
+    (function () {
+      'use strict';
+
+      // ---------------------------------------------------------------------
+      // 1. ESTADO DE LA APLICACIÓN Y ALMACENAMIENTO SEGURO
+      // ---------------------------------------------------------------------
+      const STORAGE_KEY = 'amigo_secreto_state_v1';
+
+      const state = {
+        eventName: 'Intercambio Navideño 2026',
+        eventDate: '2026-12-24',
+        eventBudget: '$400 MXN',
+        // [{ id: string, name: string, wishlist: string }]
+        participants: [],
+        // [{ giver: string, receiver: string }]
+        restrictions: [],
+        // null o { assignments: { [giverName]: receiverName }, viewedBy: { [giverName]: boolean }, createdAt: string }
+        drawResult: null,
+        editingParticipantId: null
+      };
+
+      function saveState() {
+        try {
+          const toSave = {
+            eventName: state.eventName,
+            eventDate: state.eventDate,
+            eventBudget: state.eventBudget,
+            participants: state.participants,
+            restrictions: state.restrictions,
+            drawResult: state.drawResult
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+        } catch (err) {
+          // Si localStorage está restringido (modo incógnito estricto), seguimos operando en memoria
+          console.warn('No se pudo guardar en localStorage:', err);
+        }
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            if (typeof parsed.eventName === 'string') state.eventName = parsed.eventName;
+            if (typeof parsed.eventDate === 'string') state.eventDate = parsed.eventDate;
+            if (typeof parsed.eventBudget === 'string') state.eventBudget = parsed.eventBudget;
+            if (Array.isArray(parsed.participants)) state.participants = parsed.participants;
+            if (Array.isArray(parsed.restrictions)) state.restrictions = parsed.restrictions;
+            if (parsed.drawResult && typeof parsed.drawResult === 'object') {
+              state.drawResult = parsed.drawResult;
+            }
+          }
+        } catch (err) {
+          console.warn('No se pudo leer localStorage:', err);
+        }
+      }
+
+      // ---------------------------------------------------------------------
+      // 2. UTILIDADES GENERALES (ESCAPE HTML, FECHAS, BASE64 URL-SAFE, TOAST)
+      // ---------------------------------------------------------------------
+      function escapeHTML(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function generateId() {
+        return 'p_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+      }
+
+      function formatSpanishDate(isoDate) {
+        if (!isoDate) return '';
+        try {
+          const parts = isoDate.split('-');
+          if (parts.length !== 3) return isoDate;
+          const dateObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+          return dateObj.toLocaleDateString('es-MX', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          });
+        } catch (e) {
+          return isoDate;
+        }
+      }
+
+      // Codificación Base64 URL-safe compatible con UTF-8 (acentos, emojis, etc.)
+      function encodeRevealPayload(payloadObj) {
+        const jsonStr = JSON.stringify(payloadObj);
+        const bytes = new TextEncoder().encode(jsonStr);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary)
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=+$/, '');
+      }
+
+      function decodeRevealPayload(encodedStr) {
+        let base64 = encodedStr.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4 !== 0) {
+          base64 += '=';
+        }
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        const jsonStr = new TextDecoder().decode(bytes);
+        return JSON.parse(jsonStr);
+      }
+
+      function buildSecretLink(giverName) {
+        if (!state.drawResult || !state.drawResult.assignments) return '';
+        const receiverName = state.drawResult.assignments[giverName];
+        const receiverObj = state.participants.find(p => p.name === receiverName);
+
+        const payload = {
+          e: state.eventName || 'Intercambio Amigo Secreto',
+          d: state.eventDate ? formatSpanishDate(state.eventDate) : '',
+          b: state.eventBudget || '',
+          g: giverName,
+          r: receiverName,
+          w: receiverObj ? receiverObj.wishlist : ''
+        };
+
+        const token = encodeRevealPayload(payload);
+        const baseUrl = window.location.href.split('#')[0];
+        return `${baseUrl}#reveal=${token}`;
+      }
+
+      // Copiado robusto al portapapeles con respaldo execCommand('copy')
+      async function copyTextToClipboard(text) {
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return true;
+          }
+        } catch (err) {
+          // Si falla por restricciones de iframe, usamos respaldo textarea
+        }
+
+        try {
+          const textArea = document.createElement('textarea');
+          textArea.value = text;
+          textArea.style.position = 'fixed';
+          textArea.style.top = '-9999px';
+          textArea.style.left = '-9999px';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(textArea);
+          return ok;
+        } catch (err) {
+          console.error('Error al copiar:', err);
+          return false;
+        }
+      }
+
+      function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+
+        const isSuccess = type === 'success';
+        const bgClass = isSuccess
+          ? 'bg-pine-900 text-cream-50 border-gold-400/50'
+          : 'bg-crimson-700 text-cream-50 border-crimson-500';
+        const iconName = isSuccess ? 'check-circle-2' : 'alert-circle';
+        const iconColor = isSuccess ? 'text-gold-400' : 'text-cream-100';
+
+        toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-festive text-sm font-medium transition-all duration-300 translate-y-2 opacity-0 ${bgClass}`;
+        toast.innerHTML = `
+          <i data-lucide="${iconName}" class="w-4 h-4 shrink-0 ${iconColor}"></i>
+          <span class="flex-1">${escapeHTML(message)}</span>
+        `;
+
+        container.appendChild(toast);
+        if (window.lucide) lucide.createIcons({ nodes: [toast] });
+
+        requestAnimationFrame(() => {
+          toast.classList.remove('translate-y-2', 'opacity-0');
+        });
+
+        setTimeout(() => {
+          toast.classList.add('translate-y-2', 'opacity-0');
+          setTimeout(() => toast.remove(), 300);
+        }, 3200);
+      }
+
+      // ---------------------------------------------------------------------
+      // 3. MOTOR DE CONFETI FESTIVO EN CANVAS
+      // ---------------------------------------------------------------------
+      const confetti = (function () {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let animId = null;
+
+        const colors = ['#D4AF37', '#E2BE5B', '#C83E46', '#1F493B', '#FAF5EC', '#F59E0B'];
+
+        function resizeCanvas() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function launch(count = 110) {
+          resizeCanvas();
+          for (let i = 0; i < count; i++) {
+            particles.push({
+              x: canvas.width * (0.2 + Math.random() * 0.6),
+              y: canvas.height * 0.45,
+              vx: (Math.random() - 0.5) * 14,
+              vy: -Math.random() * 13 - 4,
+              size: Math.random() * 7 + 5,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              rotation: Math.random() * 360,
+              vRot: (Math.random() - 0.5) * 12,
+              gravity: 0.28 + Math.random() * 0.12,
+              drag: 0.985,
+              alpha: 1,
+              shape: Math.random() > 0.35 ? 'rect' : 'circle'
+            });
+          }
+          if (!animId) loop();
+        }
+
+        function loop() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.vx *= p.drag;
+            p.vy = p.vy * p.drag + p.gravity;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.rotation += p.vRot;
+
+            if (p.y > canvas.height + 20) {
+              p.alpha -= 0.05;
+            }
+
+            if (p.alpha <= 0) {
+              particles.splice(i, 1);
+              continue;
+            }
+
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, p.alpha);
+            ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.fillStyle = p.color;
+
+            if (p.shape === 'rect') {
+              ctx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size * 0.6);
+            } else {
+              ctx.beginPath();
+              ctx.arc(0, 0, p.size * 0.4, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+
+          if (particles.length > 0) {
+            animId = requestAnimationFrame(loop);
+          } else {
+            animId = null;
+          }
+        }
+
+        return { launch };
+      })();
+
+      // ---------------------------------------------------------------------
+      // 4. ALGORITMO DE SORTEO POR BACKTRACKING ALEATORIO
+      // ---------------------------------------------------------------------
+      function shuffleArray(arr) {
+        const copy = arr.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+      }
+
+      /**
+       * Resuelve el sorteo garantizando:
+       * 1) Nadie se regala a sí mismo.
+       * 2) Se respetan todas las restricciones definidas.
+       * 3) Cada persona da 1 regalo y recibe 1 regalo (biyección perfecta).
+       * Usa heurística MRV (ordenar primero a quienes tienen menos opciones) + aleatoriedad
+       * para resolver al instante incluso con muchas restricciones.
+       */
+      function runSecretSantaBacktracking(participants, restrictions) {
+        const names = participants.map(p => p.name);
+        if (names.length < 3) {
+          throw new Error('Se necesitan al menos 3 participantes para organizar un intercambio secreto.');
+        }
+
+        // Mapa de prohibidos por persona
+        const forbiddenMap = {};
+        names.forEach(name => {
+          forbiddenMap[name] = new Set([name]); // Nunca a sí mismo
+        });
+
+        restrictions.forEach(rule => {
+          if (forbiddenMap[rule.giver]) {
+            forbiddenMap[rule.giver].add(rule.receiver);
+          }
+        });
+
+        // Verificación rápida: ¿alguien tiene 0 candidatos posibles?
+        for (const giver of names) {
+          const validCount = names.filter(r => !forbiddenMap[giver].has(r)).length;
+          if (validCount === 0) {
+            throw new Error(
+              `"${giver}" tiene demasiadas restricciones y no le queda ninguna persona válida a quién regalarle.`
+            );
+          }
+        }
+
+        // Ordenamos los compradores empezando por los más restringidos (con desempate aleatorio)
+        const shuffledNames = shuffleArray(names);
+        const order = shuffledNames.sort((a, b) => {
+          const optA = names.length - forbiddenMap[a].size;
+          const optB = names.length - forbiddenMap[b].size;
+          return optA - optB;
+        });
+
+        const assignments = {};
+        const usedReceivers = new Set();
+
+        function backtrack(index) {
+          if (index === order.length) {
+            return true;
+          }
+
+          const giver = order[index];
+          const forbidden = forbiddenMap[giver];
+
+          // Candidatos aún disponibles y permitidos, barajados al azar
+          const candidates = shuffleArray(
+            names.filter(candidate => !usedReceivers.has(candidate) && !forbidden.has(candidate))
+          );
+
+          for (const receiver of candidates) {
+            assignments[giver] = receiver;
+            usedReceivers.add(receiver);
+
+            if (backtrack(index + 1)) {
+              return true;
+            }
+
+            // Retroceso (backtrack)
+            usedReceivers.delete(receiver);
+            delete assignments[giver];
+          }
+
+          return false;
+        }
+
+        const success = backtrack(0);
+        if (!success) {
+          throw new Error(
+            'La combinación actual de restricciones es matemáticamente imposible (deja a alguien sin opciones válidas). Elimina alguna exclusión e inténtalo de nuevo.'
+          );
+        }
+
+        return assignments;
+      }
+
+      // ---------------------------------------------------------------------
+      // 5. RENDERIZADO DE PANTALLA 1: CONFIGURACIÓN
+      // ---------------------------------------------------------------------
+      function renderSetupScreen() {
+        document.getElementById('event-name').value = state.eventName;
+        document.getElementById('event-date').value = state.eventDate;
+        document.getElementById('event-budget').value = state.eventBudget;
+
+        renderParticipantsList();
+        renderRestrictionsUI();
+      }
+
+      function renderParticipantsList() {
+        const listEl = document.getElementById('participants-list');
+        const emptyEl = document.getElementById('participants-empty-state');
+        const countBadge = document.getElementById('participant-count-badge');
+        const clearBtn = document.getElementById('btn-clear-participants');
+
+        countBadge.textContent = state.participants.length;
+
+        if (state.participants.length === 0) {
+          emptyEl.classList.remove('hidden');
+          listEl.innerHTML = '';
+          clearBtn.classList.add('hidden');
+          return;
+        }
+
+        emptyEl.classList.add('hidden');
+        clearBtn.classList.remove('hidden');
+
+        listEl.innerHTML = state.participants
+          .map((p, idx) => {
+            const initial = escapeHTML(p.name.charAt(0).toUpperCase());
+            const safeName = escapeHTML(p.name);
+            const safeWish = p.wishlist
+              ? `<span class="inline-flex items-center gap-1 text-xs text-pine-700 bg-cream-100 border border-cream-300 px-2.5 py-0.5 rounded-full mt-1">
+                   <i data-lucide="gift" class="w-3 h-3 text-crimson-600 shrink-0"></i>
+                   ${escapeHTML(p.wishlist)}
+                 </span>`
+              : `<span class="text-xs text-pine-600/70 italic block mt-0.5">Sin pista de regalo</span>`;
+
+            return `
+              <li class="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-cream-50/90 border border-cream-300 hover:border-gold-400 transition">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-9 h-9 rounded-full bg-pine-800 text-gold-300 font-display font-bold text-sm flex items-center justify-center shrink-0">
+                    ${initial}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="font-semibold text-sm sm:text-base text-pine-900 truncate">${safeName}</p>
+                    <div class="truncate">${safeWish}</div>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    data-action="edit"
+                    data-id="${escapeHTML(p.id)}"
+                    title="Editar participante"
+                    class="p-2 rounded-lg text-pine-700 hover:text-pine-900 hover:bg-cream-200 transition"
+                  >
+                    <i data-lucide="pencil" class="w-4 h-4"></i>
+                  </button>
+                  <button
+                    type="button"
+                    data-action="delete"
+                    data-id="${escapeHTML(p.id)}"
+                    title="Eliminar participante"
+                    class="p-2 rounded-lg text-crimson-600 hover:text-crimson-700 hover:bg-crimson-50 transition"
+                  >
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </li>
+            `;
+          })
+          .join('');
+
+        if (window.lucide) lucide.createIcons({ nodes: [listEl] });
+      }
+
+      function renderRestrictionsUI() {
+        const giverSelect = document.getElementById('select-giver');
+        const receiverSelect = document.getElementById('select-receiver');
+        const listEl = document.getElementById('restrictions-list');
+        const badgeEl = document.getElementById('restrictions-count-badge');
+
+        const optionsHtml =
+          `<option value="">Selecciona persona...</option>` +
+          state.participants
+            .map(p => `<option value="${escapeHTML(p.name)}">${escapeHTML(p.name)}</option>`)
+            .join('');
+
+        const prevGiver = giverSelect.value;
+        const prevReceiver = receiverSelect.value;
+        giverSelect.innerHTML = optionsHtml;
+        receiverSelect.innerHTML = optionsHtml;
+        if (state.participants.some(p => p.name === prevGiver)) giverSelect.value = prevGiver;
+        if (state.participants.some(p => p.name === prevReceiver)) receiverSelect.value = prevReceiver;
+
+        if (state.restrictions.length > 0) {
+          badgeEl.textContent = state.restrictions.length;
+          badgeEl.classList.remove('hidden');
+        } else {
+          badgeEl.classList.add('hidden');
+        }
+
+        if (state.restrictions.length === 0) {
+          listEl.innerHTML = `<p class="text-xs text-pine-600/80 italic">No hay restricciones configuradas.</p>`;
+          return;
+        }
+
+        listEl.innerHTML = state.restrictions
+          .map(
+            (r, idx) => `
+            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-crimson-50 border border-crimson-500/25 text-xs font-semibold text-crimson-700">
+              <span>${escapeHTML(r.giver)}</span>
+              <i data-lucide="ban" class="w-3.5 h-3.5 text-crimson-600"></i>
+              <span>${escapeHTML(r.receiver)}</span>
+              <button
+                type="button"
+                data-remove-rule="${idx}"
+                aria-label="Eliminar regla"
+                class="ml-1 p-0.5 rounded-full hover:bg-crimson-500/20 text-crimson-700 transition"
+              >
+                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+              </button>
+            </span>
+          `
+          )
+          .join('');
+
+        if (window.lucide) lucide.createIcons({ nodes: [listEl] });
+      }
+
+      function addParticipantFromInputs() {
+        const nameInput = document.getElementById('input-participant-name');
+        const wishInput = document.getElementById('input-participant-wishlist');
+        const errorEl = document.getElementById('participant-error');
+
+        const rawName = nameInput.value.trim();
+        const rawWish = wishInput.value.trim();
+
+        errorEl.classList.add('hidden');
+
+        if (!rawName) {
+          errorEl.querySelector('span').textContent = 'Escribe el nombre del participante.';
+          errorEl.classList.remove('hidden');
+          nameInput.focus();
+          return;
+        }
+
+        const duplicate = state.participants.some(
+          p => p.name.toLowerCase() === rawName.toLowerCase()
+        );
+        if (duplicate) {
+          errorEl.querySelector('span').textContent = `Ya agregaste a "${rawName}". Usa un apellido o apodo si hay dos personas con el mismo nombre.`;
+          errorEl.classList.remove('hidden');
+          nameInput.focus();
+          return;
+        }
+
+        state.participants.push({
+          id: generateId(),
+          name: rawName,
+          wishlist: rawWish
+        });
+
+        nameInput.value = '';
+        wishInput.value = '';
+        nameInput.focus();
+
+        saveState();
+        renderParticipantsList();
+        renderRestrictionsUI();
+        document.getElementById('draw-error-box').classList.add('hidden');
+      }
+
+      // ---------------------------------------------------------------------
+      // 6. RENDERIZADO DE PANTALLA 2: PANEL SIN SPOILERS
+      // ---------------------------------------------------------------------
+      function renderDashboardScreen() {
+        if (!state.drawResult || !state.drawResult.assignments) return;
+
+        document.getElementById('dash-event-name').textContent =
+          state.eventName || 'Intercambio Amigo Secreto';
+
+        const dateWrap = document.getElementById('dash-event-date-wrap');
+        if (state.eventDate) {
+          dateWrap.classList.remove('hidden');
+          document.getElementById('dash-event-date').textContent = formatSpanishDate(state.eventDate);
+        } else {
+          dateWrap.classList.add('hidden');
+        }
+
+        const budgetWrap = document.getElementById('dash-event-budget-wrap');
+        if (state.eventBudget) {
+          budgetWrap.classList.remove('hidden');
+          document.getElementById('dash-event-budget').textContent = state.eventBudget;
+        } else {
+          budgetWrap.classList.add('hidden');
+        }
+
+        document.getElementById('dash-event-count').textContent = state.participants.length;
+
+        const grid = document.getElementById('dashboard-cards-grid');
+        const viewedMap = state.drawResult.viewedBy || {};
+
+        grid.innerHTML = state.participants
+          .map(p => {
+            const safeName = escapeHTML(p.name);
+            const initial = escapeHTML(p.name.charAt(0).toUpperCase());
+            const isViewed = Boolean(viewedMap[p.name]);
+
+            const statusBadge = isViewed
+              ? `<span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-pine-100 text-pine-800">
+                   <i data-lucide="check" class="w-3 h-3"></i> Visto aquí
+                 </span>`
+              : `<span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-gold-300/35 text-pine-900">
+                   <i data-lucide="lock" class="w-3 h-3 text-gold-600"></i> Secreto listo
+                 </span>`;
+
+            return `
+              <article class="bg-white rounded-2xl border border-cream-300 p-5 shadow-card flex flex-col justify-between gap-4 hover:border-gold-400 transition">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-pine-800 to-pine-950 text-gold-300 font-display font-bold text-lg flex items-center justify-center shrink-0 shadow-sm">
+                      ${initial}
+                    </div>
+                    <div class="min-w-0">
+                      <h3 class="font-display font-bold text-lg text-pine-900 truncate">${safeName}</h3>
+                      <div class="mt-0.5">${statusBadge}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-cream-200">
+                  <!-- Opción A: Ver aquí (Pasar el dispositivo) -->
+                  <button
+                    type="button"
+                    data-card-action="reveal-here"
+                    data-giver="${safeName}"
+                    class="w-full py-2.5 px-3.5 rounded-xl bg-crimson-600 hover:bg-crimson-700 text-cream-50 font-semibold text-xs sm:text-sm inline-flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98]"
+                  >
+                    <i data-lucide="eye" class="w-4 h-4 text-gold-300"></i>
+                    Ver aquí (Pasar dispositivo)
+                  </button>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <!-- Opción B: Copiar enlace secreto -->
+                    <button
+                      type="button"
+                      data-card-action="copy-link"
+                      data-giver="${safeName}"
+                      class="py-2.5 px-2.5 rounded-xl bg-cream-100 hover:bg-cream-200 text-pine-900 font-semibold text-xs inline-flex items-center justify-center gap-1.5 border border-cream-300 transition active:scale-[0.98]"
+                    >
+                      <i data-lucide="link" class="w-3.5 h-3.5 text-pine-700 shrink-0"></i>
+                      <span>Copiar enlace</span>
+                    </button>
+
+                    <!-- Opción C: Copiar mensaje para WhatsApp -->
+                    <button
+                      type="button"
+                      data-card-action="copy-whatsapp"
+                      data-giver="${safeName}"
+                      class="py-2.5 px-2.5 rounded-xl bg-pine-100 hover:bg-pine-600/15 text-pine-900 font-semibold text-xs inline-flex items-center justify-center gap-1.5 border border-pine-600/20 transition active:scale-[0.98]"
+                    >
+                      <i data-lucide="message-circle" class="w-3.5 h-3.5 text-pine-700 shrink-0"></i>
+                      <span>WhatsApp</span>
+                    </button>
+                  </div>
+                </div>
+              </article>
+            `;
+          })
+          .join('');
+
+        if (window.lucide) lucide.createIcons({ nodes: [grid] });
+      }
+
+      // ---------------------------------------------------------------------
+      // 7. FLUJO DE REVELACIÓN INTERACTIVA (MODAL Y ENLACE DIRECTO)
+      // ---------------------------------------------------------------------
+      function buildIdentityGateHTML(data, isDirectLink) {
+        return `
+          <div class="bg-white rounded-3xl border-2 border-gold-400/60 p-6 sm:p-8 shadow-festive text-center animate-pop-reveal">
+            <div class="w-16 h-16 rounded-2xl bg-pine-900 text-gold-400 mx-auto flex items-center justify-center shadow-lg mb-5 animate-float-gift">
+              <i data-lucide="shield-alert" class="w-8 h-8"></i>
+            </div>
+
+            <span class="inline-block px-3 py-1 rounded-full bg-cream-100 border border-cream-300 text-xs font-semibold text-pine-700 mb-2">
+              ${escapeHTML(data.e || 'Amigo Secreto')}
+            </span>
+
+            <h3 class="font-display text-2xl sm:text-3xl font-bold text-pine-900 mt-1">
+              ¿De verdad eres <span class="text-crimson-600">${escapeHTML(data.g)}</span>?
+            </h3>
+
+            <p class="text-sm text-pine-700 mt-3 leading-relaxed">
+              Asegúrate de que <strong>nadie más esté mirando la pantalla</strong> antes de abrir tu regalo secreto.
+            </p>
+
+            <div class="mt-7 space-y-2.5">
+              <button
+                type="button"
+                id="btn-confirm-reveal"
+                class="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-crimson-600 to-crimson-700 hover:from-crimson-500 hover:to-crimson-600 text-cream-50 font-semibold text-sm sm:text-base inline-flex items-center justify-center gap-2.5 shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <i data-lucide="gift" class="w-5 h-5 text-gold-300"></i>
+                Sí, soy yo, revelar mi amigo secreto
+              </button>
+
+              ${
+                !isDirectLink
+                  ? `<button
+                      type="button"
+                      id="btn-cancel-reveal"
+                      class="w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-pine-700 hover:bg-cream-100 transition"
+                    >
+                      Cancelar y volver
+                    </button>`
+                  : ''
+              }
+            </div>
+          </div>
+        `;
+      }
+
+      function buildGiftRevealResultHTML(data, isDirectLink) {
+        const wishlistBlock = data.w
+          ? `
+            <div class="mt-5 p-4 rounded-2xl bg-cream-100 border border-gold-400/50 text-left relative">
+              <div class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-pine-800 mb-1">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-gold-600"></i>
+                Pista / Lista de deseos
+              </div>
+              <p class="text-sm font-medium text-pine-900 leading-relaxed">
+                “${escapeHTML(data.w)}”
+              </p>
+            </div>
+          `
+          : `
+            <div class="mt-5 p-3.5 rounded-2xl bg-cream-50 border border-cream-300 text-xs text-pine-700">
+              No dejó pista específica de regalo. ¡Sorpréndele con tu creatividad!
+            </div>
+          `;
+
+        const metaChips = [];
+        if (data.d) {
+          metaChips.push(`
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pine-800/80 text-cream-100 text-xs">
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-gold-400"></i>
+              ${escapeHTML(data.d)}
+            </span>
+          `);
+        }
+        if (data.b) {
+          metaChips.push(`
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pine-800/80 text-cream-100 text-xs">
+              <i data-lucide="wallet" class="w-3.5 h-3.5 text-gold-400"></i>
+              Presupuesto: <strong class="text-gold-300">${escapeHTML(data.b)}</strong>
+            </span>
+          `);
+        }
+
+        return `
+          <div class="bg-white rounded-3xl border-2 border-gold-400 overflow-hidden shadow-festive text-center animate-pop-reveal">
+            <!-- Cabecera festiva con caja de regalo abierta -->
+            <div class="bg-gradient-to-b from-pine-900 to-pine-800 pt-7 pb-6 px-6 text-cream-50 relative">
+              <!-- Ilustración SVG de Caja de Regalo Abierta -->
+              <div class="w-24 h-24 mx-auto mb-2 relative flex items-center justify-center">
+                <svg viewBox="0 0 120 120" class="w-24 h-24 drop-shadow-lg" aria-hidden="true">
+                  <!-- Resplandor dorado -->
+                  <circle cx="60" cy="54" r="34" fill="#E2BE5B" opacity="0.22" />
+                  <!-- Cuerpo de la caja -->
+                  <rect x="26" y="54" width="68" height="48" rx="8" fill="#C83E46" />
+                  <rect x="26" y="54" width="68" height="10" fill="#8F2229" opacity="0.45" />
+                  <!-- Listón vertical -->
+                  <rect x="53" y="54" width="14" height="48" fill="#E2BE5B" />
+                  <!-- Tapa levantada animada -->
+                  <g class="gift-lid-open">
+                    <rect x="20" y="34" width="80" height="16" rx="6" fill="#B02E36" />
+                    <rect x="53" y="34" width="14" height="16" fill="#F3D98B" />
+                    <!-- Moño -->
+                    <path d="M60 34 C45 16, 30 26, 48 34 Z" fill="#E2BE5B" />
+                    <path d="M60 34 C75 16, 90 26, 72 34 Z" fill="#E2BE5B" />
+                  </g>
+                </svg>
+              </div>
+
+              <p class="text-xs uppercase tracking-widest font-semibold text-gold-300">
+                Hola ${escapeHTML(data.g)}, te tocó regalarle a:
+              </p>
+
+              <h3 class="font-display text-3xl sm:text-4xl font-bold text-cream-50 mt-2 tracking-tight">
+                ${escapeHTML(data.r)}
+              </h3>
+
+              ${
+                metaChips.length > 0
+                  ? `<div class="mt-4 flex flex-wrap items-center justify-center gap-2">${metaChips.join('')}</div>`
+                  : ''
+              }
+            </div>
+
+            <!-- Cuerpo con pista y botón de cierre seguro -->
+            <div class="p-6">
+              ${wishlistBlock}
+
+              <div class="mt-6 space-y-2.5">
+                ${
+                  !isDirectLink
+                    ? `
+                      <button
+                        type="button"
+                        id="btn-hide-result"
+                        class="w-full py-3.5 px-5 rounded-2xl bg-pine-900 hover:bg-pine-800 text-cream-50 font-semibold text-sm sm:text-base inline-flex items-center justify-center gap-2 shadow-md transition active:scale-[0.98]"
+                      >
+                        <i data-lucide="eye-off" class="w-4 h-4 text-gold-400"></i>
+                        Listo, ocultar resultado
+                      </button>
+                      <p class="text-[11px] text-pine-600">
+                        Pulsa este botón antes de pasar el dispositivo a la siguiente persona.
+                      </p>
+                    `
+                    : `
+                      <button
+                        type="button"
+                        id="btn-direct-hide-toggle"
+                        class="w-full py-3 px-5 rounded-2xl bg-pine-900 hover:bg-pine-800 text-cream-50 font-semibold text-sm inline-flex items-center justify-center gap-2 shadow-md transition"
+                      >
+                        <i data-lucide="eye-off" class="w-4 h-4 text-gold-400"></i>
+                        Ocultar pantalla
+                      </button>
+                      <button
+                        type="button"
+                        id="btn-create-own-exchange"
+                        class="w-full py-3 px-5 rounded-2xl bg-cream-100 hover:bg-cream-200 text-pine-900 font-semibold text-sm inline-flex items-center justify-center gap-2 border border-cream-300 transition"
+                      >
+                        <i data-lucide="sparkles" class="w-4 h-4 text-crimson-600"></i>
+                        Crear mi propio intercambio
+                      </button>
+                    `
+                }
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Abre modal de revelación en el mismo dispositivo (Pantalla 2)
+      function openDeviceRevealModal(giverName) {
+        if (!state.drawResult || !state.drawResult.assignments) return;
+        const receiverName = state.drawResult.assignments[giverName];
+        const receiverObj = state.participants.find(p => p.name === receiverName);
+
+        const data = {
+          e: state.eventName,
+          d: state.eventDate ? formatSpanishDate(state.eventDate) : '',
+          b: state.eventBudget,
+          g: giverName,
+          r: receiverName,
+          w: receiverObj ? receiverObj.wishlist : ''
+        };
+
+        const modal = document.getElementById('device-reveal-modal');
+        const content = document.getElementById('device-reveal-content');
+
+        content.innerHTML = buildIdentityGateHTML(data, false);
+        modal.classList.remove('hidden');
+        if (window.lucide) lucide.createIcons({ nodes: [content] });
+
+        document.getElementById('btn-cancel-reveal').addEventListener('click', closeDeviceRevealModal);
+
+        document.getElementById('btn-confirm-reveal').addEventListener('click', () => {
+          // Marcar como visto en este dispositivo
+          if (!state.drawResult.viewedBy) state.drawResult.viewedBy = {};
+          state.drawResult.viewedBy[giverName] = true;
+          saveState();
+          renderDashboardScreen();
+
+          // Mostrar resultado y lanzar confeti
+          content.innerHTML = buildGiftRevealResultHTML(data, false);
+          if (window.lucide) lucide.createIcons({ nodes: [content] });
+          confetti.launch(120);
+
+          document.getElementById('btn-hide-result').addEventListener('click', closeDeviceRevealModal);
+        });
+      }
+
+      function closeDeviceRevealModal() {
+        const modal = document.getElementById('device-reveal-modal');
+        const content = document.getElementById('device-reveal-content');
+        content.innerHTML = ''; // Limpiamos el DOM inmediatamente por privacidad
+        modal.classList.add('hidden');
+      }
+
+      // ---------------------------------------------------------------------
+      // 8. PANTALLA 3: DETECCIÓN Y RENDER DE ENLACE DIRECTO (#reveal=...)
+      // ---------------------------------------------------------------------
+      function renderDirectRevealScreen(encodedToken) {
+        const container = document.getElementById('direct-reveal-container');
+        let data = null;
+
+        try {
+          data = decodeRevealPayload(encodedToken);
+          if (!data || !data.g || !data.r) {
+            throw new Error('Datos incompletos');
+          }
+        } catch (err) {
+          container.innerHTML = `
+            <div class="bg-white rounded-3xl border border-crimson-500/40 p-6 sm:p-8 text-center shadow-card">
+              <div class="w-14 h-14 rounded-2xl bg-crimson-50 text-crimson-600 mx-auto flex items-center justify-center mb-4">
+                <i data-lucide="link-2-off" class="w-7 h-7"></i>
+              </div>
+              <h2 class="font-display text-2xl font-bold text-pine-900">Enlace secreto no válido</h2>
+              <p class="text-sm text-pine-700 mt-2">
+                Parece que el enlace está incompleto o se cortó al copiarlo. Pídele al organizador que te lo envíe nuevamente.
+              </p>
+              <button
+                type="button"
+                id="btn-invalid-link-home"
+                class="mt-6 px-6 py-3 rounded-xl bg-pine-800 hover:bg-pine-900 text-cream-50 font-semibold text-sm inline-flex items-center gap-2"
+              >
+                Crear mi propio intercambio
+              </button>
+            </div>
+          `;
+          if (window.lucide) lucide.createIcons({ nodes: [container] });
+          document.getElementById('btn-invalid-link-home').addEventListener('click', exitDirectRevealMode);
+          return;
+        }
+
+        function showGate() {
+          container.innerHTML = buildIdentityGateHTML(data, true);
+          if (window.lucide) lucide.createIcons({ nodes: [container] });
+
+          document.getElementById('btn-confirm-reveal').addEventListener('click', showResult);
+        }
+
+        function showResult() {
+          container.innerHTML = buildGiftRevealResultHTML(data, true);
+          if (window.lucide) lucide.createIcons({ nodes: [container] });
+          confetti.launch(130);
+
+          document.getElementById('btn-direct-hide-toggle').addEventListener('click', showGate);
+          document.getElementById('btn-create-own-exchange').addEventListener('click', exitDirectRevealMode);
+        }
+
+        showGate();
+      }
+
+      function exitDirectRevealMode() {
+        // Limpiar hash sin recargar
+        if (history.replaceState) {
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+        } else {
+          window.location.hash = '';
+        }
+        routeScreens();
+      }
+
+      // ---------------------------------------------------------------------
+      // 9. ENRUTADOR DE PANTALLAS (PANTALLA 1, 2 O 3)
+      // ---------------------------------------------------------------------
+      function routeScreens() {
+        const screenSetup = document.getElementById('screen-setup');
+        const screenDash = document.getElementById('screen-dashboard');
+        const screenDirect = document.getElementById('screen-direct-reveal');
+        const headerStatus = document.getElementById('header-status-text');
+
+        const hash = window.location.hash || '';
+        if (hash.startsWith('#reveal=')) {
+          const token = hash.slice('#reveal='.length).trim();
+          screenSetup.classList.add('hidden');
+          screenDash.classList.add('hidden');
+          screenDirect.classList.remove('hidden');
+          headerStatus.textContent = 'Revelación Privada';
+          renderDirectRevealScreen(token);
+          return;
+        }
+
+        screenDirect.classList.add('hidden');
+
+        if (state.drawResult && state.drawResult.assignments) {
+          screenSetup.classList.add('hidden');
+          screenDash.classList.remove('hidden');
+          headerStatus.textContent = 'Sorteo Listo · Sin Spoilers';
+          renderDashboardScreen();
+        } else {
+          screenDash.classList.add('hidden');
+          screenSetup.classList.remove('hidden');
+          headerStatus.textContent = 'Modo Organizador';
+          renderSetupScreen();
+        }
+      }
+
+      // ---------------------------------------------------------------------
+      // 10. EVENTOS E INTERACCIONES DE USUARIO
+      // ---------------------------------------------------------------------
+      function initEvents() {
+        // Sincronizar campos del evento en tiempo real
+        document.getElementById('event-name').addEventListener('input', e => {
+          state.eventName = e.target.value;
+          saveState();
+        });
+        document.getElementById('event-date').addEventListener('change', e => {
+          state.eventDate = e.target.value;
+          saveState();
+        });
+        document.getElementById('event-budget').addEventListener('input', e => {
+          state.eventBudget = e.target.value;
+          saveState();
+        });
+
+        // Agregar participante con botón o tecla Enter
+        document.getElementById('btn-add-participant').addEventListener('click', addParticipantFromInputs);
+        document.getElementById('input-participant-name').addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            addParticipantFromInputs();
+          }
+        });
+        document.getElementById('input-participant-wishlist').addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            addParticipantFromInputs();
+          }
+        });
+
+        // Cargar ejemplo rápido
+        document.getElementById('btn-load-sample').addEventListener('click', () => {
+          state.eventName = 'Intercambio Navideño 2026';
+          state.eventDate = '2026-12-24';
+          state.eventBudget = '$400 MXN';
+          state.participants = [
+            { id: generateId(), name: 'Ana', wishlist: 'Libros de misterio o velas aromáticas' },
+            { id: generateId(), name: 'Carlos', wishlist: 'Café de especialidad en grano o calcetines divertidos' },
+            { id: generateId(), name: 'Sofía', wishlist: 'Plantas de interior o accesorios para pintar' },
+            { id: generateId(), name: 'Mateo', wishlist: 'Juegos de mesa o audífonos deportivos' },
+            { id: generateId(), name: 'Elena', wishlist: 'Tazas artesanales o chocolates amargos' },
+            { id: generateId(), name: 'Luis', wishlist: 'Termo térmico o novelas gráficas' }
+          ];
+          state.restrictions = [
+            { giver: 'Ana', receiver: 'Carlos' },
+            { giver: 'Carlos', receiver: 'Ana' }
+          ];
+
+          saveState();
+          renderSetupScreen();
+          document.getElementById('draw-error-box').classList.add('hidden');
+          showToast('¡Ejemplo cargado con 6 participantes y 1 regla de pareja!');
+        });
+
+        // Vaciar lista de participantes
+        document.getElementById('btn-clear-participants').addEventListener('click', () => {
+          state.participants = [];
+          state.restrictions = [];
+          saveState();
+          renderSetupScreen();
+          showToast('Lista de participantes vaciada.');
+        });
+
+        // Delegación en lista de participantes (Editar / Eliminar)
+        document.getElementById('participants-list').addEventListener('click', e => {
+          const btn = e.target.closest('button[data-action]');
+          if (!btn) return;
+          const action = btn.dataset.action;
+          const id = btn.dataset.id;
+          const target = state.participants.find(p => p.id === id);
+          if (!target) return;
+
+          if (action === 'delete') {
+            state.participants = state.participants.filter(p => p.id !== id);
+            state.restrictions = state.restrictions.filter(
+              r => r.giver !== target.name && r.receiver !== target.name
+            );
+            saveState();
+            renderParticipantsList();
+            renderRestrictionsUI();
+          } else if (action === 'edit') {
+            state.editingParticipantId = id;
+            document.getElementById('edit-name-input').value = target.name;
+            document.getElementById('edit-wishlist-input').value = target.wishlist || '';
+            document.getElementById('edit-modal-error').classList.add('hidden');
+            document.getElementById('edit-participant-modal').classList.remove('hidden');
+            document.getElementById('edit-name-input').focus();
+          }
+        });
+
+        // Modal de edición de participante
+        document.getElementById('btn-edit-cancel').addEventListener('click', () => {
+          state.editingParticipantId = null;
+          document.getElementById('edit-participant-modal').classList.add('hidden');
+        });
+
+        document.getElementById('btn-edit-save').addEventListener('click', () => {
+          const target = state.participants.find(p => p.id === state.editingParticipantId);
+          if (!target) return;
+
+          const newName = document.getElementById('edit-name-input').value.trim();
+          const newWish = document.getElementById('edit-wishlist-input').value.trim();
+          const errEl = document.getElementById('edit-modal-error');
+
+          if (!newName) {
+            errEl.textContent = 'El nombre no puede quedar vacío.';
+            errEl.classList.remove('hidden');
+            return;
+          }
+
+          const duplicate = state.participants.some(
+            p => p.id !== target.id && p.name.toLowerCase() === newName.toLowerCase()
+          );
+          if (duplicate) {
+            errEl.textContent = 'Ya existe otro participante con ese nombre.';
+            errEl.classList.remove('hidden');
+            return;
+          }
+
+          const oldName = target.name;
+          target.name = newName;
+          target.wishlist = newWish;
+
+          // Actualizar restricciones si cambió el nombre
+          state.restrictions.forEach(r => {
+            if (r.giver === oldName) r.giver = newName;
+            if (r.receiver === oldName) r.receiver = newName;
+          });
+
+          state.editingParticipantId = null;
+          document.getElementById('edit-participant-modal').classList.add('hidden');
+          saveState();
+          renderParticipantsList();
+          renderRestrictionsUI();
+          showToast('Participante actualizado.');
+        });
+
+        // Colapsar / expandir sección de restricciones
+        document.getElementById('btn-toggle-restrictions').addEventListener('click', () => {
+          const panel = document.getElementById('restrictions-panel');
+          const chevron = document.getElementById('restrictions-chevron');
+          const btn = document.getElementById('btn-toggle-restrictions');
+          const isHidden = panel.classList.contains('hidden');
+
+          panel.classList.toggle('hidden');
+          chevron.classList.toggle('rotate-180', isHidden);
+          btn.setAttribute('aria-expanded', String(isHidden));
+        });
+
+        // Agregar restricción
+        document.getElementById('btn-add-restriction').addEventListener('click', () => {
+          const giver = document.getElementById('select-giver').value;
+          const receiver = document.getElementById('select-receiver').value;
+          const isMutual = document.getElementById('checkbox-mutual').checked;
+          const errEl = document.getElementById('restriction-error');
+
+          errEl.classList.add('hidden');
+
+          if (!giver || !receiver) {
+            errEl.querySelector('span').textContent = 'Selecciona ambas personas para crear la restricción.';
+            errEl.classList.remove('hidden');
+            return;
+          }
+          if (giver === receiver) {
+            errEl.querySelector('span').textContent = 'Nadie puede regalarse a sí mismo por defecto; elige dos personas distintas.';
+            errEl.classList.remove('hidden');
+            return;
+          }
+
+          const addPair = (g, r) => {
+            const exists = state.restrictions.some(rule => rule.giver === g && rule.receiver === r);
+            if (!exists) {
+              state.restrictions.push({ giver: g, receiver: r });
+            }
+          };
+
+          addPair(giver, receiver);
+          if (isMutual) {
+            addPair(receiver, giver);
+          }
+
+          saveState();
+          renderRestrictionsUI();
+          document.getElementById('draw-error-box').classList.add('hidden');
+        });
+
+        // Eliminar restricción
+        document.getElementById('restrictions-list').addEventListener('click', e => {
+          const btn = e.target.closest('button[data-remove-rule]');
+          if (!btn) return;
+          const index = Number(btn.dataset.removeRule);
+          state.restrictions.splice(index, 1);
+          saveState();
+          renderRestrictionsUI();
+          document.getElementById('draw-error-box').classList.add('hidden');
+        });
+
+        // Ejecutar sorteo secreto
+        document.getElementById('btn-run-draw').addEventListener('click', () => {
+          const errorBox = document.getElementById('draw-error-box');
+          const errorMsg = document.getElementById('draw-error-message');
+          errorBox.classList.add('hidden');
+
+          state.eventName = document.getElementById('event-name').value.trim() || 'Intercambio Navideño 2026';
+          state.eventDate = document.getElementById('event-date').value;
+          state.eventBudget = document.getElementById('event-budget').value.trim();
+
+          try {
+            const assignments = runSecretSantaBacktracking(state.participants, state.restrictions);
+            state.drawResult = {
+              assignments,
+              viewedBy: {},
+              createdAt: new Date().toISOString()
+            };
+            saveState();
+            routeScreens();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast('¡Sorteo realizado sin spoilers!');
+          } catch (err) {
+            errorMsg.textContent = err.message;
+            errorBox.classList.remove('hidden');
+            errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+
+        // Acciones de tarjetas en Pantalla 2 (Ver aquí, Copiar enlace, WhatsApp)
+        document.getElementById('dashboard-cards-grid').addEventListener('click', async e => {
+          const btn = e.target.closest('button[data-card-action]');
+          if (!btn) return;
+
+          const action = btn.dataset.cardAction;
+          const giverName = btn.dataset.giver;
+
+          if (action === 'reveal-here') {
+            openDeviceRevealModal(giverName);
+          } else if (action === 'copy-link') {
+            const url = buildSecretLink(giverName);
+            const ok = await copyTextToClipboard(url);
+            if (ok) {
+              showToast(`¡Enlace secreto de ${giverName} copiado!`);
+            } else {
+              showToast('No se pudo copiar automáticamente. Intenta de nuevo.', 'error');
+            }
+          } else if (action === 'copy-whatsapp') {
+            const url = buildSecretLink(giverName);
+            const eventTitle = state.eventName || 'Intercambio de Amigo Secreto';
+            const datePart = state.eventDate ? `\n📅 Fecha: ${formatSpanishDate(state.eventDate)}` : '';
+            const budgetPart = state.eventBudget ? `\n💰 Presupuesto: ${state.eventBudget}` : '';
+
+            const waMessage =
+              `🎁 ¡Hola ${giverName}! Te invito a nuestro *${eventTitle}*.${datePart}${budgetPart}\n\n` +
+              `🤫 Descubre en secreto a quién te tocó regalarle abriendo tu enlace personal (no lo compartas con nadie):\n${url}`;
+
+            const ok = await copyTextToClipboard(waMessage);
+            if (ok) {
+              showToast(`¡Mensaje para WhatsApp de ${giverName} copiado!`);
+            } else {
+              showToast('No se pudo copiar el mensaje.', 'error');
+            }
+          }
+        });
+
+        // Modal de reinicio de sorteo
+        document.getElementById('btn-open-reset-modal').addEventListener('click', () => {
+          document.getElementById('reset-confirm-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-reset-cancel').addEventListener('click', () => {
+          document.getElementById('reset-confirm-modal').classList.add('hidden');
+        });
+
+        document.getElementById('btn-reset-keep-people').addEventListener('click', () => {
+          state.drawResult = null;
+          saveState();
+          document.getElementById('reset-confirm-modal').classList.add('hidden');
+          routeScreens();
+          showToast('Sorteo reiniciado. Tus participantes siguen listos.');
+        });
+
+        document.getElementById('btn-reset-all').addEventListener('click', () => {
+          state.drawResult = null;
+          state.participants = [];
+          state.restrictions = [];
+          state.eventName = 'Intercambio Navideño 2026';
+          state.eventDate = '2026-12-24';
+          state.eventBudget = '$400 MXN';
+          saveState();
+          document.getElementById('reset-confirm-modal').classList.add('hidden');
+          routeScreens();
+          showToast('Todo reiniciado desde cero.');
+        });
+
+        // Escuchar cambios de hash (por si se pega un enlace #reveal= en la misma pestaña)
+        window.addEventListener('hashchange', routeScreens);
+      }
+
+      // ---------------------------------------------------------------------
+      // 11. INICIALIZACIÓN AL CARGAR EL DOM
+      // ---------------------------------------------------------------------
+      document.addEventListener('DOMContentLoaded', () => {
+        loadState();
+        initEvents();
+        routeScreens();
+        if (window.lucide) lucide.createIcons();
+      });
+    })();
+  </script>
+</body>
+</html>
